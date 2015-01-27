@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Fdas</string>
+    <string name="alarm_off">alarm on</string>
+    <string name="alarm_on">alarm off</string>
+    <string name="notification_title">Seoul Welfare</string>
+    <string name="notification_ticker">delivery information for you</string>
+
+</resources>
