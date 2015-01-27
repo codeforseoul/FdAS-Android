@@ -1,18 +1,24 @@
 package com.welfare4u.fdas.gcm;
 
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.welfare4u.fdas.Constants;
+import com.welfare4u.fdas.R;
+import com.welfare4u.fdas.activity.MainActivity;
 
 /**
  * Created by koo on 2015-01-26.
  */
 public class GcmIntentService extends IntentService {
-    public static final int NOTIFICATION_ID = 1;
-
     public GcmIntentService() {
         super("GcmIntentService");
     }
@@ -36,16 +42,32 @@ public class GcmIntentService extends IntentService {
                 sendNotification("Send error: " + extras.toString());
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
                 sendNotification("Deleted messages on server: " + extras.toString());
-                // If it's a regular GCM message, do some work.
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 String msg = intent.getStringExtra("message");
-                // Post notification of received message.
-//            sendNotification("Received: " + extras.toString());
-                sendNotification("Received: " + msg);
+                sendNotification(msg);
                 Log.i("GcmIntentService.java | onHandleIntent", "Received: " + extras.toString());
             }
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
         GCMBroadcastReceiver.completeWakefulIntent(intent);
+    }
+
+    private void sendNotification(String msg) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this);
+        notificationCompat.setSmallIcon(R.drawable.ic_launcher);
+        notificationCompat.setTicker(getResources().getString(R.string.notification_ticker));
+        notificationCompat.setWhen(System.currentTimeMillis());
+        notificationCompat.setContentTitle(getResources().getString(R.string.notification_title));
+        notificationCompat.setContentText(msg);
+        notificationCompat.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
+        notificationCompat.setContentIntent(pendingIntent);
+        notificationCompat.setAutoCancel(true);
+
+        // notification send
+        notificationManager.notify(Constants.NOTIFICATION_ID, notificationCompat.build());
     }
 }

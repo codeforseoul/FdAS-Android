@@ -23,8 +23,6 @@ import com.welfare4u.fdas.R;
 public class MainActivity extends ActionBarActivity {
 
     private WebView webView;
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor sharedPreferencesEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,35 +32,13 @@ public class MainActivity extends ActionBarActivity {
         // webview
         webView = (WebView) findViewById(R.id.webview);
         webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("http://www.welfare4u.com");
+        webView.loadUrl(Constants.SERVICE_URL);
         webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
 
         // webview setting
         WebSettings webSettings = webView.getSettings();
         webSettings.setBuiltInZoomControls(false);
         webSettings.setJavaScriptEnabled(true);
-
-        // properties
-        sharedPreferences = getSharedPreferences(Constants.SharedPreferencesName, MODE_PRIVATE);
-        sharedPreferencesEditor = sharedPreferences.edit();
-
-        // notification
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-
-        NotificationCompat.Builder notificationCompat = new NotificationCompat.Builder(this);
-        notificationCompat.setSmallIcon(R.drawable.ic_launcher);
-        notificationCompat.setTicker(getResources().getString(R.string.notification_ticker));
-        notificationCompat.setWhen(System.currentTimeMillis());
-        notificationCompat.setContentTitle(getResources().getString(R.string.notification_title));
-        notificationCompat.setContentText("message");
-        notificationCompat.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
-        notificationCompat.setContentIntent(pendingIntent);
-        notificationCompat.setAutoCancel(true);
-
-        // notification send
-        notificationManager.notify(Constants.NotifyIdentifyId, notificationCompat.build());
     }
 
     @Override
@@ -74,6 +50,10 @@ public class MainActivity extends ActionBarActivity {
      * javascript bridge
      */
     private class AndroidBridge {
+        // properties
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
+
         /**
          * alarm off
          * @param arg

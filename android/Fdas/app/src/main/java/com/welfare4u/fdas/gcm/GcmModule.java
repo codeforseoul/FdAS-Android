@@ -4,16 +4,21 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
+import android.text.TextUtils;
+import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.welfare4u.fdas.Constants;
+
+import java.io.IOException;
 
 /**
  * Created by koo on 2015-01-26.
  */
 public class GcmModule {
-    // for GCM
-    public static final String PROPERTY_REG_ID = "AIzaSyAUp1ZVI-4ly6hEIdf335IPAcDfvhpJiBk";
-    private static final String PROPERTY_APP_VERSION = "appVersion";
     /**
      * Substitute you own sender ID here. This is the project number you got
      * from the API Console, as described in "Getting Started."
@@ -59,7 +64,7 @@ public class GcmModule {
      */
     private String getRegistrationId(Context context) {
         final SharedPreferences prefs = getGCMPreferences(context);
-        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
+        String registrationId = prefs.getString(Constants.GCM_REG_ID, "");
         if (registrationId.isEmpty()) {
             Log.i(TAG, "Registration not found.");
             return "";
@@ -67,7 +72,7 @@ public class GcmModule {
         // Check if app was updated; if so, it must clear the registration ID
         // since the existing regID is not guaranteed to work with the new
         // app version.
-        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
+        int registeredVersion = prefs.getInt(Constants.GCM_REG_ID, Integer.MIN_VALUE);
         int currentVersion = getAppVersion(context);
         if (registeredVersion != currentVersion) {
             Log.i(TAG, "App version changed.");
@@ -79,7 +84,6 @@ public class GcmModule {
 
     /**
      * Registers the application with GCM servers asynchronously.
-     * <p/>
      * Stores the registration ID and app versionCode in the application's
      * shared preferences.
      */
@@ -132,8 +136,8 @@ public class GcmModule {
         int appVersion = getAppVersion(context);
         Log.i(TAG, "Saving regId on app version " + appVersion);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PROPERTY_REG_ID, regId);
-        editor.putInt(PROPERTY_APP_VERSION, appVersion);
+        editor.putString("GCM_REG_ID", regId);
+        editor.putInt("APP_VERSION", appVersion);
         editor.commit();
     }
 
