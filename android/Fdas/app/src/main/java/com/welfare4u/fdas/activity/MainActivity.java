@@ -1,4 +1,4 @@
-package com.welfare4u.fdas;
+package com.welfare4u.fdas.activity;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -7,26 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.service.notification.NotificationListenerService;
-import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v4.app.NotificationCompat;
+import android.support.v7.app.ActionBarActivity;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.welfare4u.fdas.gcm.GcmIntentService;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.logging.LogRecord;
-
-import static android.app.PendingIntent.*;
+import com.welfare4u.fdas.Constants;
+import com.welfare4u.fdas.R;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -41,7 +32,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         // webview
-        webView = (WebView)findViewById(R.id.webview);
+        webView = (WebView) findViewById(R.id.webview);
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("http://www.welfare4u.com");
         webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
@@ -52,11 +43,11 @@ public class MainActivity extends ActionBarActivity {
         webSettings.setJavaScriptEnabled(true);
 
         // properties
-        sharedPreferences = getSharedPreferences("fdas", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences(Constants.SharedPreferencesName, MODE_PRIVATE);
         sharedPreferencesEditor = sharedPreferences.edit();
 
         // notification
-        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
@@ -71,11 +62,11 @@ public class MainActivity extends ActionBarActivity {
         notificationCompat.setAutoCancel(true);
 
         // notification send
-        notificationManager.notify(15978943, notificationCompat.build());
+        notificationManager.notify(Constants.NotifyIdentifyId, notificationCompat.build());
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig){
+    public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
 
@@ -87,9 +78,9 @@ public class MainActivity extends ActionBarActivity {
          * alarm off
          * @param arg
          */
-        public void alarmOff(final String arg){
+        public void alarmOff(final String arg) {
             Handler handler = new Handler();
-            handler.post( new Runnable() {
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
                     sharedPreferencesEditor.putBoolean("alarm", false);
@@ -104,15 +95,15 @@ public class MainActivity extends ActionBarActivity {
          * alarm on
          * @param arg
          */
-        public void alarmOn(final String arg){
+        public void alarmOn(final String arg) {
             Handler handler = new Handler();
-            handler.post( new Runnable() {
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
                     sharedPreferencesEditor.putBoolean("alarm", true);
                     sharedPreferencesEditor.commit();
                     webView.loadUrl("javascript:alarmOn()");
-                    Toast.makeText(MainActivity.this, getResources().getString(R.string.alarm_off), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, getResources().getString(R.string.alarm_on), Toast.LENGTH_SHORT).show();
                 }
             });
         }

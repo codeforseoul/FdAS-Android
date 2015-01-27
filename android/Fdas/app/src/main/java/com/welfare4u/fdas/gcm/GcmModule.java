@@ -1,6 +1,9 @@
 package com.welfare4u.fdas.gcm;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
@@ -9,60 +12,50 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
  */
 public class GcmModule {
     // for GCM
-    public static final String PROPERTY_REG_ID = "registration_id";
+    public static final String PROPERTY_REG_ID = "AIzaSyAUp1ZVI-4ly6hEIdf335IPAcDfvhpJiBk";
     private static final String PROPERTY_APP_VERSION = "appVersion";
-
-    private GoogleCloudMessaging _gcm;
-    private String _regId;
-    private String TAG = "gcm test";
-    private String GCM_SHARED_PREFERENCE_NAME = "default";
-
-    private GcmEvent _callbackGcm = null;
-
-    public void setGcmListener(GcmEvent l)
-    {
-        _callbackGcm = l;
-    }
-
     /**
      * Substitute you own sender ID here. This is the project number you got
      * from the API Console, as described in "Getting Started."
      */
 
-    private static final String SENDER_ID = "<<구글 개발자 콘솔 - 프로젝트 번호>>";
+    private static final String SENDER_ID = "85400076310";
+    private GoogleCloudMessaging _gcm;
+    private String _regId;
+    private String TAG = "gcm test";
+    private String GCM_SHARED_PREFERENCE_NAME = "default";
+    private GcmEvent _callbackGcm = null;
 
     /**
      * @return Application's version code from the {@code PackageManager}.
      */
     private static int getAppVersion(Context context) {
         try {
-            PackageInfo packageInfo = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
+            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             return packageInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            // should never happen
             throw new RuntimeException("Could not get package name: " + e);
         }
+    }
+
+    public void setGcmListener(GcmEvent e) {
+        _callbackGcm = e;
     }
 
     /**
      * @return Application's {@code SharedPreferences}.
      */
     private SharedPreferences getGCMPreferences(Context context) {
-        // This sample app persists the registration ID in shared preferences, but
-        // how you store the regID in your app is up to you.
-
-
         return context.getSharedPreferences(GCM_SHARED_PREFERENCE_NAME, Context.MODE_PRIVATE);
     }
 
     /**
      * Gets the current registration ID for application on GCM service.
-     * <p>
+     * <p/>
      * If result is empty, the app needs to register.
      *
      * @return registration ID, or empty string if there is no existing
-     *         registration ID.
+     * registration ID.
      */
     private String getRegistrationId(Context context) {
         final SharedPreferences prefs = getGCMPreferences(context);
@@ -84,26 +77,20 @@ public class GcmModule {
     }
 
 
-
     /**
      * Registers the application with GCM servers asynchronously.
-     * <p>
+     * <p/>
      * Stores the registration ID and app versionCode in the application's
      * shared preferences.
      */
     // gcm 서버에 접속해서 registration id를 발급받는다.
-    private void registerInBackground(final Context context)
-    {
-        new AsyncTask<Void, Void, String>()
-        {
+    private void registerInBackground(final Context context) {
+        new AsyncTask<Void, Void, String>() {
             @Override
-            protected String doInBackground(Void... params)
-            {
+            protected String doInBackground(Void... params) {
                 String msg = "";
-                try
-                {
-                    if (_gcm == null)
-                    {
+                try {
+                    if (_gcm == null) {
                         _gcm = GoogleCloudMessaging.getInstance(context);
                     }
                     _regId = _gcm.register(SENDER_ID);
@@ -115,9 +102,7 @@ public class GcmModule {
 
                     // Persist the regID - no need to register again.
                     storeRegistrationId(context, _regId);
-                }
-                catch (IOException ex)
-                {
+                } catch (IOException ex) {
                     msg = "Error :" + ex.getMessage();
                     // If there is an error, don't just keep trying to register.
                     // Require the user to click a button again, or perform
@@ -128,8 +113,7 @@ public class GcmModule {
             }
 
             @Override
-            protected void onPostExecute(String msg)
-            {
+            protected void onPostExecute(String msg) {
                 Log.d("MainActivity.java | onPostExecute", "|" + msg + "|");
                 Log.d(TAG, msg);
             }
@@ -141,7 +125,7 @@ public class GcmModule {
      * {@code SharedPreferences}.
      *
      * @param context application's context.
-     * @param regId registration ID
+     * @param regId   registration ID
      */
     private void storeRegistrationId(Context context, String regId) {
         final SharedPreferences prefs = getGCMPreferences(context);
@@ -154,19 +138,15 @@ public class GcmModule {
     }
 
 
-    public void initGcm(Context context)
-    {
+    public void initGcm(Context context) {
         // google play service가 사용가능한가
-        if (checkPlayServices(context))
-        {
+        if (checkPlayServices(context)) {
             _gcm = GoogleCloudMessaging.getInstance(context);
             _regId = getRegistrationId(context);
 
             if (TextUtils.isEmpty(_regId))
                 registerInBackground(context);
-        }
-        else
-        {
+        } else {
             Log.i("MainActivity.java | onCreate", "|No valid Google Play Services APK found.|");
         }
     }
@@ -179,7 +159,7 @@ public class GcmModule {
     private boolean checkPlayServices(Context context) {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         if (resultCode != ConnectionResult.SUCCESS) {
-            if( _callbackGcm != null )
+            if (_callbackGcm != null)
                 _callbackGcm.OnGooglePlayServicesNotAvailable(resultCode);
             return false;
         }
