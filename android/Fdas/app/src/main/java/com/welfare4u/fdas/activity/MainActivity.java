@@ -1,5 +1,6 @@
 package com.welfare4u.fdas.activity;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -10,7 +11,6 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,7 +20,7 @@ import com.welfare4u.fdas.Constants;
 import com.welfare4u.fdas.R;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
 
     private WebView webView;
 
@@ -54,36 +54,31 @@ public class MainActivity extends ActionBarActivity {
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
         SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();
 
-        /**
-         * alarm off
-         * @param arg
-         */
-        public void alarmOff(final String arg) {
+        public void alarmFromJS(final String str) {
             Handler handler = new Handler();
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    sharedPreferencesEditor.putBoolean("alarm", false);
+                    Boolean isAlarm = Boolean.valueOf(str);
+                    sharedPreferencesEditor.putBoolean("isAlarm", isAlarm);
                     sharedPreferencesEditor.commit();
-                    webView.loadUrl("javascript:alarmOff()");
-                    Toast.makeText(MainActivity.this, getResources().getString(R.string.alarm_off), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, getResources().getString( isAlarm ? R.string.alarm_on : R.string.alarm_off ), Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
-        /**
-         * alarm on
-         * @param arg
-         */
-        public void alarmOn(final String arg) {
+        public void alarmToJS(final String arg) {
             Handler handler = new Handler();
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    sharedPreferencesEditor.putBoolean("alarm", true);
-                    sharedPreferencesEditor.commit();
-                    webView.loadUrl("javascript:alarmOn()");
-                    Toast.makeText(MainActivity.this, getResources().getString(R.string.alarm_on), Toast.LENGTH_SHORT).show();
+                    Boolean isAlarm = sharedPreferences.getBoolean("isAlarm", true);
+
+                    if ( isAlarm ){
+                        webView.loadUrl("javascript:alarmOff()");
+                    } else {
+                        webView.loadUrl("javascript:alarmOn()");
+                    }
                 }
             });
         }
