@@ -11,7 +11,7 @@ import android.util.Log;
 /**
  * Created by koo on 2015-01-26.
  */
-public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
+public class GCMBroadcastReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i("GcmBroadcastReceiver.java | onReceive", "|" + "=================" + "|");

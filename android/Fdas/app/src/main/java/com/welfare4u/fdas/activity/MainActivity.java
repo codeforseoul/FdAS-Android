@@ -31,7 +31,7 @@ public class MainActivity extends Activity {
 
         // webview
         webView = (WebView) findViewById(R.id.webview);
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClientClass());
         webView.loadUrl(Constants.SERVICE_URL);
         webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
 
@@ -44,6 +44,14 @@ public class MainActivity extends Activity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+    }
+
+    private class WebViewClientClass extends WebViewClient{
+//        @Override
+//        public boolean shouldOverrideUrlLoading(WebView view, String url){
+//            view.loadUrl(url);
+//            return true;
+//        }
     }
 
     /**
