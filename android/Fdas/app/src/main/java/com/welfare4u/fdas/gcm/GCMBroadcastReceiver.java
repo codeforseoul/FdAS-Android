@@ -11,19 +11,19 @@ import android.util.Log;
 /**
  * Created by koo on 2015-01-26.
  */
-public class GCMBroadcastReceiver extends WakefulBroadcastReceiver {
+public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i("GCMBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
+        Log.i("GcmBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
         Bundle bundle = intent.getExtras();
         for (String key : bundle.keySet()) {
             Object value = bundle.get(key);
-            Log.i("GCMBroadcastReceiver.java | onReceive", "|" + String.format("%s : %s (%s)", key, value.toString(), value.getClass().getName()) + "|");
+            Log.i("GcmBroadcastReceiver.java | onReceive", "|" + String.format("%s : %s (%s)", key, value.toString(), value.getClass().getName()) + "|");
         }
-        Log.i("GCMBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
+        Log.i("GcmBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
 
         // Explicitly specify that GcmIntentService will handle the intent.
-        ComponentName comp = new ComponentName(context.getPackageName(), GCMIntentService.class.getName());
+        ComponentName comp = new ComponentName(context.getPackageName(), GcmIntentService.class.getName());
 
         // Start the service, keeping the device awake while it is launching.
         startWakefulService(context, intent.setComponent(comp));

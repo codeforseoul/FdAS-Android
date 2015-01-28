@@ -19,8 +19,8 @@ import com.welfare4u.fdas.activity.MainActivity;
  * Created by koo on 2015-01-26.
  * GCM에서 알림이 왔을 때 폰에 표시하기 위한 기능
  */
-public class GCMIntentService extends IntentService {
-    public GCMIntentService() {
+public class GcmIntentService extends IntentService {
+    public GcmIntentService() {
         super("GcmIntentService");
     }
 
@@ -50,7 +50,7 @@ public class GCMIntentService extends IntentService {
             }
         }
         // Release the wake lock provided by the WakefulBroadcastReceiver.
-        GCMBroadcastReceiver.completeWakefulIntent(intent);
+        GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
 
     /*
