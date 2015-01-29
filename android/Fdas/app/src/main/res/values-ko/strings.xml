@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Fdas</string>
+    <string name="app_name">FdAS</string>
     <string name="alarm_off">알람이 해제되었습니다.</string>
     <string name="alarm_on">알람이 등록되었습니다.</string>
     <string name="notification_title">알뜰 서울의 발견</string>
     <string name="notification_ticker">알뜰한 정보가 도착했습니다.</string>
+
+    <string name="alert_title">알림</string>
+    <string name="alert_ok">확인</string>
+    <string name="alert_cancel">취소</string>
 
 </resources>

@@ -14,13 +14,7 @@ import android.util.Log;
 public class GCMBroadcastReceiver extends WakefulBroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i("GcmBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
-        Bundle bundle = intent.getExtras();
-        for (String key : bundle.keySet()) {
-            Object value = bundle.get(key);
-            Log.i("GcmBroadcastReceiver.java | onReceive", "|" + String.format("%s : %s (%s)", key, value.toString(), value.getClass().getName()) + "|");
-        }
-        Log.i("GcmBroadcastReceiver.java | onReceive", "|" + "=================" + "|");
+        Log.i("GcmBroadcastReceiver.java | onReceive", "Received: " + intent.getExtras().toString());
 
         // Explicitly specify that GcmIntentService will handle the intent.
         ComponentName comp = new ComponentName(context.getPackageName(), GcmIntentService.class.getName());

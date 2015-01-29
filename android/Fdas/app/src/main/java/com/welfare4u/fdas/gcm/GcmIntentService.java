@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -44,17 +45,21 @@ public class GcmIntentService extends IntentService {
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
                 sendNotification("Deleted messages on server: " + extras.toString());
             } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-                String msg = intent.getStringExtra("message");
-                sendNotification(msg);
+                SharedPreferences sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
                 Log.i("GcmIntentService.java | onHandleIntent", "Received: " + extras.toString());
+
+                if ( sharedPreferences.getBoolean("isAlarm", true) ){
+                    sendNotification(intent.getStringExtra("key1"));
+                }
             }
         }
+
         // Release the wake lock provided by the WakefulBroadcastReceiver.
         GCMBroadcastReceiver.completeWakefulIntent(intent);
     }
 
     /*
-     * display notification, function add
+     * display notification
      */
     private void sendNotification(String msg) {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

@@ -10,8 +10,9 @@ public final class Constants {
     public static final String SP_NAME = "fdas";
 
     // web service
-    public static final String SERVICE_URL = "http://www.welfare4u.com";
+//    public static final String SERVICE_URL = "http://www.welfare4u.com";
+    public static final String SERVICE_URL = " http://192.168.1.100:3000";
 
     // gcm
-    public static final String GCM_REG_ID = "AIzaSyAUp1ZVI-4ly6hEIdf335IPAcDfvhpJiBk";
+    public static final String GCM_SENDER_ID = "85400076310";
 }
