@@ -23,7 +23,7 @@
             android:name=".activity.MainActivity"
             android:launchMode="singleTask"
             android:label="@string/app_name"
-            android:configChanges="orientation|keyboardHidden|keyboard"
+            android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

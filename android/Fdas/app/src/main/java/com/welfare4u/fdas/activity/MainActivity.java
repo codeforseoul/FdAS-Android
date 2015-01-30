@@ -13,7 +13,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -34,7 +36,15 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.welfare4u.fdas.Constants;
 import com.welfare4u.fdas.R;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 
 public class MainActivity extends Activity {
@@ -44,7 +54,7 @@ public class MainActivity extends Activity {
     private SharedPreferences.Editor sharedPreferencesEditor;
 
     private GoogleCloudMessaging gcm;
-    private String regId;
+    private String registrationId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +68,7 @@ public class MainActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
+        // webView.clearCache(true);
         webView.setWebViewClient(new WebViewClientClass());
         webView.setWebChromeClient(new WebChromeClientClass());
         webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
@@ -70,18 +81,23 @@ public class MainActivity extends Activity {
         // background service start
         if ( checkPlayServices() ){
             gcm = GoogleCloudMessaging.getInstance(this);
-            regId = getRegistrationId();
+            registrationId = getRegistrationId();
 
-            if ( TextUtils.isEmpty(regId) ){
+            Log.i("MainActivity.java | has registrationId: ", registrationId);
+
+            if ( TextUtils.isEmpty(registrationId) ){
                 registerInBackground();
             }
         }
+
+        // test
+        // sharedPreferencesEditor.putBoolean("isAlarm", true);
+        // sharedPreferencesEditor.commit();
     }
 
     @Override
     protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);
-        Log.i("MainActivity.java | onNewIntent: ", intent.getStringExtra("msg") );
     }
 
     /**
@@ -118,11 +134,11 @@ public class MainActivity extends Activity {
                 Log.i("page is /app/setting : ", url);
                 Boolean isAlarm = sharedPreferences.getBoolean("isAlarm", true);
 
-                if ( isAlarm ){
-                    webView.loadUrl("javascript:alarmOff()");
+                /*if ( isAlarm ){
+                    webView.loadUrl("javascript:fromDeviceCall('alarmSetFromDeviceOn')");
                 } else {
-                    webView.loadUrl("javascript:alarmOn()");
-                }
+                    webView.loadUrl("javascript:fromDeviceCall('alarmSetFromDeviceOff')");
+                }*/
             }
         }
 
@@ -133,6 +149,20 @@ public class MainActivity extends Activity {
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl){
             super.onReceivedError(view, errorCode, description, failingUrl);
             Log.i("error : ", String.format("%s : %s", Integer.toString(errorCode), description) );
+        }
+
+        /*
+         * 링크 페이지 클릭시
+         */
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url){
+            if ( url.indexOf(Constants.SERVICE_URL) == -1 ){
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(intent);
+                return false;
+            }
+
+            return true;
         }
     }
 
@@ -173,6 +203,14 @@ public class MainActivity extends Activity {
         }
     }
 
+    /*
+     * 설정
+     */
+    @Override
+    public void onConfigurationChanged(Configuration configuration){
+        super.onConfigurationChanged(configuration);
+    }
+
     /**
      * javascript bridge
      */
@@ -185,11 +223,11 @@ public class MainActivity extends Activity {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i("AndroidBridge | alarmFromJS: ", str);
-                    Boolean isAlarm = Boolean.valueOf(str);
+                    Boolean isAlarm = str.equals("1") ? true : false;
                     sharedPreferencesEditor.putBoolean("isAlarm", isAlarm);
                     sharedPreferencesEditor.commit();
                     Toast.makeText(MainActivity.this, getResources().getString( isAlarm ? R.string.alarm_on : R.string.alarm_off ), Toast.LENGTH_SHORT).show();
+                    Log.i("AndroidBridge | alarmFromJS: ", Boolean.toString(isAlarm));
                 }
             });
         }
@@ -261,13 +299,16 @@ public class MainActivity extends Activity {
                         gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
                     }
 
-                    regId = gcm.register(Constants.GCM_SENDER_ID);
+                    registrationId = gcm.register(Constants.GCM_SENDER_ID);
 
-                    sharedPreferencesEditor.putString("registrationId", regId);
+                    sharedPreferencesEditor.putBoolean("isAlarm", false);
+                    sharedPreferencesEditor.putString("registrationId", registrationId);
                     sharedPreferencesEditor.putInt("appVersion", getAppVersion());
                     sharedPreferencesEditor.commit();
 
-                    return "Device registered, id = " + regId;
+                    registerServer();
+
+                    return "Device registered, id = " + registrationId;
                 } catch (IOException e){
                     return "Error: " + e.getMessage();
                 }
@@ -282,5 +323,36 @@ public class MainActivity extends Activity {
         asyncTask.execute(null, null, null);
     }
 
+    /*
+     * registration id to server
+     */
+    private String registerServer() throws IOException {
+        DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
 
+        /* server send */
+        HttpGet httpGet = new HttpGet(
+                            Constants.SERVICE_URL +
+                            Constants.PUSH_SERVER_PATH +
+                            "?device=android" +
+                            "&registrationId=" + registrationId +
+                            "&appVersion=" + getAppVersion() );
+
+        /* delay */
+        HttpParams httpParams = defaultHttpClient.getParams();
+        HttpConnectionParams.setConnectionTimeout(httpParams, 10000);
+        HttpConnectionParams.setSoTimeout(httpParams, 10000);
+
+        /* response from server */
+        HttpResponse httpResponse = defaultHttpClient.execute(httpGet);
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent()));
+
+        String line = "";
+        String result = "";
+
+        while ((line = bufferedReader.readLine()) != null){
+            result += line;
+        }
+
+        return result;
+    }
 }
