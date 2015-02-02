@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
@@ -30,6 +31,16 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import com.facebook.FacebookException;
+import com.facebook.FacebookOperationCanceledException;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphUser;
+import com.facebook.widget.FacebookDialog;
+import com.facebook.widget.WebDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -45,6 +56,10 @@ import org.apache.http.params.HttpParams;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+import java.util.Arrays;
 
 
 public class MainActivity extends Activity {
@@ -55,6 +70,8 @@ public class MainActivity extends Activity {
 
     private GoogleCloudMessaging gcm;
     private String registrationId;
+
+    private UiLifecycleHelper uiLifecycleHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +95,12 @@ public class MainActivity extends Activity {
         sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
         sharedPreferencesEditor = sharedPreferences.edit();
 
+        // facebook help
+        uiLifecycleHelper = new UiLifecycleHelper(this, null);
+        uiLifecycleHelper.onCreate(savedInstanceState);
+
+
+
         // background service start
         if ( checkPlayServices() ){
             gcm = GoogleCloudMessaging.getInstance(this);
@@ -98,6 +121,49 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+
+        uiLifecycleHelper.onActivityResult(requestCode, resultCode, data, new FacebookDialog.Callback() {
+            @Override
+            public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle bundle) {
+                Log.i("Activity", "Success!");
+            }
+
+            @Override
+            public void onError(FacebookDialog.PendingCall pendingCall, Exception e, Bundle bundle) {
+                Log.e("Activity", String.format("Error: %s", e.toString()));
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        uiLifecycleHelper.onResume();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        uiLifecycleHelper.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        uiLifecycleHelper.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        uiLifecycleHelper.onDestroy();
     }
 
     /**
@@ -231,6 +297,43 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface
+        public void facebookLogin(){
+            Handler handler = new Handler();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+//                    Session.openActiveSession(MainActivity.this, true, sessionStatusCallback);
+                    Session session = Session.getActiveSession();
+
+                    if (!session.isOpened() && !session.isClosed()) {
+                        session.openForRead(new Session.
+                            OpenRequest(MainActivity.this).
+                            setPermissions(Arrays.asList("public_profile")).
+                            setCallback(sessionStatusCallback));
+                    } else {
+                        Session.openActiveSession(MainActivity.this, true, sessionStatusCallback);
+                    }
+                }
+
+            });
+        }
+
+        @JavascriptInterface
+        public void facebookShare(final String name, final String caption, final String description, final String link, final String picture){
+            Handler handler = new Handler();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i("AndroidBridge | facebookShare: ", name);
+                    Log.i("AndroidBridge | facebookShare: ", description);
+                    Log.i("AndroidBridge | facebookShare: ", link);
+                    Log.i("AndroidBridge | facebookShare: ", picture);
+                    facebookShareDialog(name, caption, description, link, picture);
+                }
+            });
+        }
     }
 
     /*
@@ -354,5 +457,70 @@ public class MainActivity extends Activity {
         }
 
         return result;
+    }
+
+    /*
+     * facebook Session
+     */
+    private Session.StatusCallback sessionStatusCallback = new Session.StatusCallback() {
+        // session state change callback
+        @Override
+        public void call(Session session, SessionState state, Exception e) {
+            if (state.isOpened()) {
+                Log.i("MainActivity.java | StatusCallback: ", "Logged in...");
+
+                Request.newMeRequest(session, new Request.GraphUserCallback() {
+                    // callback after Graph API response with user object
+                    @Override
+                    public void onCompleted(GraphUser graphUser, Response response) {
+                        if (graphUser != null) {
+                            Log.i("MainActivity.java | StatusCallback: ", graphUser.toString());
+                        }
+                    }
+                });
+            } else if (state.isClosed()) {
+                Log.i("MainActivity.java | StatusCallback: ", "Logged out...");
+            }
+        }
+    };
+
+    /*
+     * facebook share dialog
+     */
+    private void facebookShareDialog(String name, String caption, String description, String link, String picture){
+        try {
+            if (FacebookDialog.canPresentShareDialog(this, FacebookDialog.ShareDialogFeature.SHARE_DIALOG)){
+                FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(this).
+                        setName(name).
+                        setCaption(caption).
+                        setDescription(description).
+                        setLink(link).
+                        setPicture(picture).
+                        build();
+                uiLifecycleHelper.trackPendingDialogCall(shareDialog.present());
+            } else {
+                Bundle params = new Bundle();
+                params.putString("name", name);
+                params.putString("caption", caption);
+                params.putString("description", description);
+                params.putString("link", link);
+                params.putString("picture", picture);
+
+                WebDialog feedDialog = (new WebDialog.FeedDialogBuilder(this, Session.getActiveSession(), params)).
+                        setOnCompleteListener(new WebDialog.OnCompleteListener(){
+
+                            @Override
+                            public void onComplete(Bundle bundle, FacebookException e) {}
+                        }).build();
+                feedDialog.show();
+            }
+        } catch (Exception e ){
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.putExtra(Intent.EXTRA_SUBJECT, name);
+            intent.putExtra(Intent.EXTRA_TEXT, link);
+            intent.setType("text/plain");
+            startActivity(Intent.createChooser(intent, "공유"));
+        }
     }
 }
