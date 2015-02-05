@@ -13,9 +13,13 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 }
 
@@ -25,4 +29,11 @@ dependencies {
     compile 'com.android.support:support-v4:21.0.3'
     compile 'com.google.android.gms:play-services:6.5.87'
     compile 'com.facebook.android:facebook-android-sdk:3.22.0'
+    compile 'com.kakao.sdk:kakaotalk:+'
+    compile 'com.kakao.sdk:kakaostory:+'
+    compile 'com.kakao.sdk:kakaolink:+'
+    compile 'com.kakao.sdk:usermgmt:+'
+//    compile ('com.kakao.sdk:usermgmt:+'){
+//        exclude module: 'support-v4'
+//    }
 }

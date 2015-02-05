@@ -11,4 +11,6 @@
     <string name="alert_ok">OK</string>
     <string name="alert_cancel">Cancel</string>
 
+    <string name="kakako_link">More</string>
+
 </resources>
