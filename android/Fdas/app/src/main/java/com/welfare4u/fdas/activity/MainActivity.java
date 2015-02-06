@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -30,8 +31,6 @@ public class MainActivity extends KakaoActivity {
     private String TAG = "MainActivity.java | ";
 
     private SharedPreferences.Editor sharedPreferencesEditor;
-
-    KakaoActivity kakaoService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +57,33 @@ public class MainActivity extends KakaoActivity {
         // GcmService
         new GcmService(this);
 
-        // SNS
-//        kakaoService = new KakaoService(savedInstanceState);
+        // facebook login test
+        findViewById(R.id.buttonFBLogin).setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+//                facebookLoginDialog();
+            }
+        });
+
+        // facebook share test
+        findViewById(R.id.buttonFBShare).setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+//                facebookShareDialog("aaa", "bbbb", "cccc", "https://www.google.co.kr", "https://www.google.co.kr/images/srpr/logo11w.png");
+            }
+        });
+
+        // kakao login test
+        findViewById(R.id.buttonKKLogin).setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                kakaoLoginDialog();
+            }
+        });
+
+        // kakao share test
+        findViewById(R.id.buttonKKShare).setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                kakaoShareDialog("aaa", "bbbb", "cccc", "https://www.google.co.kr", "https://www.google.co.kr/images/srpr/logo11w.png");
+            }
+        });
     }
 
     @Override
@@ -194,7 +218,7 @@ public class MainActivity extends KakaoActivity {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                 facebookLoginDialog();
+//                 facebookLoginDialog();
                 }
 
             });
@@ -215,7 +239,7 @@ public class MainActivity extends KakaoActivity {
                     Log.d(TAG + "AndroidBridge | facebookShare: ", description);
                     Log.d(TAG + "AndroidBridge | facebookShare: ", link);
                     Log.d(TAG + "AndroidBridge | facebookShare: ", picture);
-                    facebookShareDialog(name, caption, description, link, picture);
+//                    facebookShareDialog(name, caption, description, link, picture);
                 }
             });
         }

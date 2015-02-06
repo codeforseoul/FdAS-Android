@@ -1,6 +1,8 @@
 package com.welfare4u.fdas.activity;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -9,13 +11,14 @@ import com.kakao.AuthType;
 import com.kakao.KakaoLink;
 import com.kakao.KakaoParameterException;
 import com.kakao.KakaoTalkLinkMessageBuilder;
-import com.kakao.MeResponseCallback;
 import com.kakao.Session;
 import com.kakao.SessionCallback;
 import com.kakao.SignupResponseCallback;
 import com.kakao.UserManagement;
-import com.kakao.UserProfile;
 import com.kakao.exception.KakaoException;
+import com.kakao.helper.SharedPreferencesCache;
+import com.kakao.widget.LoginButton;
+import com.welfare4u.fdas.Constants;
 import com.welfare4u.fdas.R;
 
 import java.util.HashMap;
@@ -27,8 +30,9 @@ public class KakaoActivity extends FacebookActivity {
 
     private String TAG = "KakaoActivity.java | ";
 
+    private SharedPreferences.Editor sharedPreferencesEditor;
 
-    private SessionCallback kakaoSessionCallback;
+    private final SessionCallback kakaoSessionCallback =  new KakaoSessionStatusCallback() ;
 
     private KakaoLink kakaoLink;
     private KakaoTalkLinkMessageBuilder kakaoTalkLinkMessageBuilder;
@@ -37,7 +41,8 @@ public class KakaoActivity extends FacebookActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        kakaoSessionCallback = new KakaoSessionStatusCallback();
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
+        sharedPreferencesEditor = sharedPreferences.edit();
 
         try {
             kakaoLink = KakaoLink.getKakaoLink(this);
@@ -45,14 +50,23 @@ public class KakaoActivity extends FacebookActivity {
         } catch (KakaoParameterException e) {
             e.printStackTrace();
         }
+
+//        loginButton = (LoginButton)findViewById(R.id.com_kakao_login);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
         Log.d(TAG, "onResume: " + String.valueOf(Session.initializeSession(this, kakaoSessionCallback)));
+
         Log.d(TAG, "onResume: " + String.valueOf(Session.getCurrentSession()));
+        Log.d(TAG, "onResume: " + String.valueOf(Session.getAppCache()));
         Log.d(TAG, "onResume: " + String.valueOf(Session.getCurrentSession().isOpened()));
+
+
+        SharedPreferencesCache sharedPreferencesCache = Session.getAppCache();
+        Log.d(TAG, "onResume: " + String.valueOf(sharedPreferencesCache.getStringMap("")));
     }
 
     /*

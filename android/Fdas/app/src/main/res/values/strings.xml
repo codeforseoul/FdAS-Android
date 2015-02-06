@@ -14,6 +14,6 @@
     <string name="kakako_link">More</string>
 
     <string name="facebook_app_id">493065400723583</string>
-    <string name="kakao_app_id">42821a8bb24bb16f9bcef203171287bf</string>
+    <string name="kakao_app_key">42821a8bb24bb16f9bcef203171287bf</string>
 
 </resources>
