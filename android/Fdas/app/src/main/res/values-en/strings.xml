@@ -6,6 +6,7 @@
     <string name="alarm_on">alarm off</string>
     <string name="notification_title">Seoul Welfare</string>
     <string name="notification_ticker">delivery information for you</string>
+    <string name="wait">Wait for moment</string>
 
     <string name="alert_title">Alarm</string>
     <string name="alert_ok">OK</string>

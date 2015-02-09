@@ -21,16 +21,26 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.model.GraphUser;
 import com.welfare4u.fdas.Constants;
 import com.welfare4u.fdas.R;
 import com.welfare4u.fdas.gcm.GcmService;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class MainActivity extends KakaoActivity {
+
+public class MainActivity extends FacebookActivity {
 
     private String TAG = "MainActivity.java | ";
 
     private SharedPreferences.Editor sharedPreferencesEditor;
+
+    public static WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +48,7 @@ public class MainActivity extends KakaoActivity {
         setContentView(R.layout.activity_main);
 
         // webview
-        WebView webView = (WebView) findViewById(R.id.webview);
+        webView = (WebView) findViewById(R.id.webview);
         WebSettings webSettings = webView.getSettings();
         webSettings.setBuiltInZoomControls(false);
         webSettings.setJavaScriptEnabled(true);
@@ -47,8 +57,8 @@ public class MainActivity extends KakaoActivity {
         webView.clearCache(true);
         webView.setWebViewClient(new WebViewClientClass());
         webView.setWebChromeClient(new WebChromeClientClass());
-        webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
         webView.loadUrl(Constants.SERVICE_URL);
+        webView.addJavascriptInterface(new AndroidBridge(), "androidBridge");
 
         // properties
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.SP_NAME, MODE_PRIVATE);
@@ -56,39 +66,26 @@ public class MainActivity extends KakaoActivity {
 
         // GcmService
         new GcmService(this);
-
-        // facebook login test
-        findViewById(R.id.buttonFBLogin).setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-//                facebookLoginDialog();
-            }
-        });
-
-        // facebook share test
-        findViewById(R.id.buttonFBShare).setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-//                facebookShareDialog("aaa", "bbbb", "cccc", "https://www.google.co.kr", "https://www.google.co.kr/images/srpr/logo11w.png");
-            }
-        });
-
-        // kakao login test
-        findViewById(R.id.buttonKKLogin).setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                kakaoLoginDialog();
-            }
-        });
-
-        // kakao share test
-        findViewById(R.id.buttonKKShare).setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                kakaoShareDialog("aaa", "bbbb", "cccc", "https://www.google.co.kr", "https://www.google.co.kr/images/srpr/logo11w.png");
-            }
-        });
     }
 
     @Override
     protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);
+
+        if (intent.getStringExtra("kakaoInfo") != null && intent.getStringExtra("kakaoToken") != null){
+            JSONObject json = new JSONObject();
+
+            try {
+                json.put("user", intent.getStringExtra("kakaoInfo").replace("\"", ""));
+                json.put("accessToken", intent.getStringExtra("kakaoToken"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d(TAG + "onNewIntent: ", json.toString());
+
+            webView.loadUrl("javascript:fromDeviceCall('kakaoLoginFromDevice', '" + json.toString() + "')");
+        }
     }
 
     @Override
@@ -123,17 +120,6 @@ public class MainActivity extends KakaoActivity {
         public void onPageFinished(WebView view, String url){
             super.onPageFinished(view, url);
             Log.d(TAG + "is load done: ", url);
-
-            if ( url.lastIndexOf("/app/setting") > -1 ){
-                Log.i("page is /app/setting : ", url);
-                /*Boolean isAlarm = sharedPreferences.getBoolean("isAlarm", true);
-
-                if ( isAlarm ){
-                    webView.loadUrl("javascript:fromDeviceCall('alarmSetFromDeviceOn')");
-                } else {
-                    webView.loadUrl("javascript:fromDeviceCall('alarmSetFromDeviceOff')");
-                }*/
-            }
         }
 
         /*
@@ -198,15 +184,29 @@ public class MainActivity extends KakaoActivity {
 
         // js -> android
         @JavascriptInterface
-        public void alarmSet(final String str) {
-            Handler handler = new Handler();
-            handler.post(new Runnable() {
+        public void alarmSet(final String strAlarm, final String strInit) {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Boolean isAlarm = str.equals("1");
+                    Boolean isAlarm = strAlarm.equals("1");
+                    Boolean isInit = strInit.equals("1");
+
+                    // save
                     sharedPreferencesEditor.putBoolean("isAlarm", isAlarm);
                     sharedPreferencesEditor.commit();
-                    Toast.makeText(MainActivity.this, getResources().getString( isAlarm ? R.string.alarm_on : R.string.alarm_off ), Toast.LENGTH_SHORT).show();
+
+                    // call result
+                    webView.loadUrl("javascript:fromDeviceCall('alarmSetFromDevice', '" + (isAlarm ? "1" : "0" ) + "')");
+
+                    // ui result
+                    if ( !isInit ){
+                        Toast.makeText(
+                                MainActivity.this,
+                                getResources().getString( isAlarm ? R.string.alarm_on : R.string.alarm_off ),
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    // debug
                     Log.d(TAG + "AndroidBridge | alarmSet: ", Boolean.toString(isAlarm));
                 }
             });
@@ -214,13 +214,11 @@ public class MainActivity extends KakaoActivity {
 
         @JavascriptInterface
         public void facebookLogin(){
-            Handler handler = new Handler();
-            handler.post(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-//                 facebookLoginDialog();
+                    facebookLoginDialog();
                 }
-
             });
         }
 
@@ -231,15 +229,14 @@ public class MainActivity extends KakaoActivity {
                 final String description,
                 final String link,
                 final String picture){
-            Handler handler = new Handler();
-            handler.post(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG + "AndroidBridge | facebookShare: ", name);
                     Log.d(TAG + "AndroidBridge | facebookShare: ", description);
                     Log.d(TAG + "AndroidBridge | facebookShare: ", link);
                     Log.d(TAG + "AndroidBridge | facebookShare: ", picture);
-//                    facebookShareDialog(name, caption, description, link, picture);
+                    facebookShareDialog(name, caption, description, link, picture);
                 }
             });
         }
@@ -247,11 +244,11 @@ public class MainActivity extends KakaoActivity {
 
         @JavascriptInterface
         public void kakaoLogin(){
-            Handler handler = new Handler();
-            handler.post(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    kakaoLoginDialog();
+                    Intent intent = new Intent(MainActivity.this, KakaoActivity.class);
+                    startActivity(intent);
                 }
             });
         }
@@ -263,15 +260,14 @@ public class MainActivity extends KakaoActivity {
                 final String description,
                 final String link,
                 final String picture){
-            Handler handler = new Handler();
-            handler.post(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG + "AndroidBridge | kakaoShare: ", name);
                     Log.d(TAG + "AndroidBridge | kakaoShare: ", description);
                     Log.d(TAG + "AndroidBridge | kakaoShare: ", link);
                     Log.d(TAG + "AndroidBridge | kakaoShare: ", picture);
-                    kakaoShareDialog(name, caption, description, link, picture);
+                    KakaoActivity.kakaoShareDialog(MainActivity.this, name, caption, description, link, picture);
                 }
             });
         }

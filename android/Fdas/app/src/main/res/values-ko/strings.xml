@@ -6,6 +6,7 @@
     <string name="alarm_on">알람이 등록되었습니다.</string>
     <string name="notification_title">알뜰 서울의 발견</string>
     <string name="notification_ticker">알뜰한 정보가 도착했습니다.</string>
+    <string name="wait">잠시만 기다려 주세요.</string>
 
     <string name="alert_title">알림</string>
     <string name="alert_ok">확인</string>

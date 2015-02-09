@@ -16,6 +16,10 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.widget.WebDialog;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Arrays;
 
 /**
@@ -79,18 +83,27 @@ public class FacebookActivity extends Activity {
 
         @Override
         public void call(final Session session, SessionState state, Exception e) {
-
             if (state.isOpened()) {
                 Log.d(TAG + "StatusCallback: ", "Logged in...");
 
                 // callback after Graph API response with user object
                 Request.newMeRequest(session, new Request.GraphUserCallback() {
-
                     @Override
                     public void onCompleted(GraphUser graphUser, Response response) {
                         if (graphUser != null && session != null) {
-                            String str = "{" + graphUser.getInnerJSONObject().toString() + ",accessToken:\"" + session.getAccessToken() + "\"}";
-                            Log.d(TAG + "StatusCallback: ", str);
+                            JSONObject json = new JSONObject();
+
+                            try {
+                                json.put("user", graphUser.getInnerJSONObject());
+                                json.put("accessToken", session.getAccessToken());
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+
+                            Log.d(TAG + "onCompleted: ", json.toString());
+
+                            // call result
+                            MainActivity.webView.loadUrl("javascript:fromDeviceCall('facebookLoginFromDevice', '" + json.toString() + "')");
 
                             // e.g.
                             // {user={"id":"-","first_name":"-","birthday":"-","timezone":-,"location":{"id":"-","name":"-"},"email":"-","verified":true,"name":"-","locale":"-","link":"-","last_name":"-","gender":"-","updated_time":"-"}, accessToken="-"}
@@ -106,6 +119,7 @@ public class FacebookActivity extends Activity {
     protected void facebookLoginDialog(){
         Session session = Session.getActiveSession();
 
+        // new session?
         if (!session.isOpened() && !session.isClosed()) {
             session.openForRead(new Session.
                     OpenRequest(FacebookActivity.this).

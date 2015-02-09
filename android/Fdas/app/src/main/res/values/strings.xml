@@ -6,14 +6,15 @@
     <string name="alarm_on">alarm off</string>
     <string name="notification_title">Seoul Welfare</string>
     <string name="notification_ticker">delivery information for you</string>
-
+    <string name="wait">Wait for moment</string>
     <string name="alert_title">Alarm</string>
     <string name="alert_ok">OK</string>
     <string name="alert_cancel">Cancel</string>
-
     <string name="kakako_link">More</string>
-
     <string name="facebook_app_id">493065400723583</string>
     <string name="kakao_app_key">42821a8bb24bb16f9bcef203171287bf</string>
+    <string name="title_activity_kakao_help">KakaoHelpActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

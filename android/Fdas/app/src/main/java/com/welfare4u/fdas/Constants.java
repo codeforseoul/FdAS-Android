@@ -11,7 +11,7 @@ public final class Constants {
 
     // web service
 //    public static final String SERVICE_URL = "http://www.welfare4u.com";
-    public static final String SERVICE_URL = "http://192.168.1.104:3000";
+    public static final String SERVICE_URL = "http://192.168.1.101:3000";
     public static final String PUSH_SERVER_PATH = "/pushkey/add";
 
     // gcm

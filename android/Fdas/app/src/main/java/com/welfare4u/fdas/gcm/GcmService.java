@@ -120,7 +120,6 @@ public class GcmService {
 
                     String registrationId = gcm.register(Constants.GCM_SENDER_ID);
 
-                    sharedPreferencesEditor.putBoolean("isAlarm", false);
                     sharedPreferencesEditor.putString("registrationId", registrationId);
                     sharedPreferencesEditor.putInt("appVersion", getAppVersion());
                     sharedPreferencesEditor.commit();
@@ -147,14 +146,10 @@ public class GcmService {
      */
     private String registerServer(String registrationId) throws IOException {
         DefaultHttpClient defaultHttpClient = new DefaultHttpClient();
+        String url = Constants.SERVICE_URL + Constants.PUSH_SERVER_PATH + "?device=android" + "&registrationId=" + registrationId + "&appVersion=" + getAppVersion();
 
         /* server send */
-        HttpGet httpGet = new HttpGet(
-                Constants.SERVICE_URL +
-                        Constants.PUSH_SERVER_PATH +
-                        "?device=android" +
-                        "&registrationId=" + registrationId +
-                        "&appVersion=" + getAppVersion() );
+        HttpGet httpGet = new HttpGet(url);
 
         /* delay */
         HttpParams httpParams = defaultHttpClient.getParams();
@@ -171,6 +166,8 @@ public class GcmService {
         while ((line = bufferedReader.readLine()) != null){
             result += line;
         }
+
+        Log.d(TAG + "registerServer: ", url);
 
         return result;
     }
